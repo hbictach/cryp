@@ -5,6 +5,8 @@ from services.telegram import send_message
 from core.ai import analyze_news
 from core.alerts import is_alert
 from services.twitter import format_tweet
+from db.database import save_news
+save_news(item)
 
 MAX_PER_CYCLE = 3
 
