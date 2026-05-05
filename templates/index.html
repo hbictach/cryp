@@ -6,16 +6,24 @@
 
 <script src="https://cdn.tailwindcss.com"></script>
 
-<title>CryptositNews</title>
+<title>CryptositNews Pro</title>
 
 <style>
 body {
   background: radial-gradient(circle at top, #0f172a, #020617);
 }
-.card:hover {
-  border-color: #38bdf8;
-  transform: translateY(-2px);
+
+.glass {
+  background: rgba(15,23,42,0.6);
+  backdrop-filter: blur(12px);
+}
+
+.card {
   transition: 0.2s;
+}
+.card:hover {
+  transform: translateY(-3px);
+  border-color: #38bdf8;
 }
 </style>
 
@@ -24,40 +32,33 @@ body {
 <body class="text-white font-sans">
 
 <!-- HEADER -->
-<div class="flex justify-between items-center px-6 py-4 border-b border-slate-800">
+<div class="flex justify-between items-center px-6 py-4 border-b border-slate-800 glass">
 
-  <h1 class="text-lg font-bold">🚀 CryptositNews</h1>
+  <div class="flex items-center gap-2">
+    <span class="font-bold text-lg">🚀 CryptositNews</span>
+    <span class="text-green-400 text-xs animate-pulse">● LIVE</span>
+  </div>
 
-  <!-- SEARCH -->
   <form method="get">
     <input name="search" value="{{ search }}"
            placeholder="Search news..."
-           class="bg-slate-900 px-4 py-2 rounded-lg text-sm border border-slate-700">
+           class="bg-slate-900 px-4 py-2 rounded-xl text-sm border border-slate-700 w-64">
   </form>
 
 </div>
 
+<!-- LIVE PRICES -->
+<div id="prices" class="flex gap-6 px-6 py-2 text-xs border-b border-slate-800 text-green-400">
+Loading prices...
+</div>
+
 <!-- TABS -->
 <div class="flex gap-4 px-6 py-3 text-sm border-b border-slate-800">
-
-  <a href="/?tab=all" class="{% if tab=='all' %}text-blue-400{% endif %}">All</a>
-
-  <a href="/?tab=bitcoin" class="{% if tab=='bitcoin' %}text-blue-400{% endif %}">
-    Bitcoin
-  </a>
-
-  <a href="/?tab=ethereum" class="{% if tab=='ethereum' %}text-blue-400{% endif %}">
-    Ethereum
-  </a>
-
-  <a href="/?tab=defi" class="{% if tab=='defi' %}text-blue-400{% endif %}">
-    DeFi
-  </a>
-
-  <a href="/?tab=nft" class="{% if tab=='nft' %}text-blue-400{% endif %}">
-    NFT
-  </a>
-
+  <a href="/?tab=all">All</a>
+  <a href="/?tab=bitcoin">Bitcoin</a>
+  <a href="/?tab=ethereum">Ethereum</a>
+  <a href="/?tab=defi">DeFi</a>
+  <a href="/?tab=nft">NFT</a>
 </div>
 
 <!-- MAIN -->
@@ -68,11 +69,9 @@ body {
 
 {% for item in news %}
 
-<div class="card bg-slate-900 p-5 rounded-xl border border-slate-800">
+<div class="card glass p-5 rounded-xl border border-slate-800">
 
-  <!-- TOP -->
-  <div class="flex justify-between items-center text-xs mb-2">
-
+  <div class="flex justify-between text-xs mb-2">
     <span class="bg-blue-600 px-2 py-1 rounded">
       {{ item.category }}
     </span>
@@ -80,20 +79,16 @@ body {
     <span class="text-slate-400">
       {{ item.time }}
     </span>
-
   </div>
 
-  <!-- TITLE -->
-  <div class="text-sm font-semibold mb-2">
+  <div class="font-semibold mb-2">
     {{ item.title }}
   </div>
 
-  <!-- SOURCE -->
   <div class="text-xs text-slate-400 mb-2">
     {{ item.source }}
   </div>
 
-  <!-- META -->
   <div class="flex gap-3 text-xs">
 
     <span class="
@@ -110,13 +105,10 @@ body {
 
   </div>
 
-  <!-- LINK -->
-  <div class="mt-3">
-    <a href="{{ item.url }}" target="_blank"
-       class="text-blue-400 text-xs">
-       Read more →
-    </a>
-  </div>
+  <a href="{{ item.url }}" target="_blank"
+     class="text-blue-400 text-xs block mt-3">
+     Read more →
+  </a>
 
 </div>
 
@@ -127,22 +119,60 @@ body {
 <!-- SIDEBAR -->
 <div class="space-y-4">
 
-<div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
-  <h3 class="mb-2 text-sm">📊 Market</h3>
-  <p>BTC</p>
-  <p>ETH</p>
-  <p>SOL</p>
+<div class="glass p-4 rounded-xl border border-slate-800 text-center">
+  ✈️
+  <p class="text-sm mt-2 mb-3">Get alerts instantly</p>
+  <a href="#" class="bg-blue-500 px-4 py-2 rounded-xl text-sm">
+    Join Channel
+  </a>
 </div>
 
-<div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+<div class="glass p-4 rounded-xl border border-slate-800">
+  <h3 class="mb-2 text-sm">📊 Market</h3>
+  <div id="marketBox">Loading...</div>
+</div>
+
+<div class="glass p-4 rounded-xl border border-slate-800">
   <h3 class="mb-2 text-sm">🔥 Trending</h3>
   <p>#Bitcoin</p>
+  <p>#Ethereum</p>
   <p>#ETF</p>
 </div>
 
 </div>
 
 </div>
+
+<!-- JS -->
+<script>
+
+// 💰 prices API
+async function loadPrices() {
+  try {
+    const res = await fetch("https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd");
+    const data = await res.json();
+
+    document.getElementById("prices").innerHTML =
+      `BTC $${data.bitcoin.usd} | ETH $${data.ethereum.usd} | SOL $${data.solana.usd}`;
+
+    document.getElementById("marketBox").innerHTML =
+      `BTC: $${data.bitcoin.usd}<br>
+       ETH: $${data.ethereum.usd}<br>
+       SOL: $${data.solana.usd}`;
+
+  } catch {
+    document.getElementById("prices").innerHTML = "Price error";
+  }
+}
+
+// 🔄 auto refresh
+setInterval(() => {
+  location.reload();
+}, 60000);
+
+loadPrices();
+
+</script>
 
 </body>
 </html>
