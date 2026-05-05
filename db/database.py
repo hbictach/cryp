@@ -21,6 +21,13 @@ def init_db():
     """)
     conn.commit()
 
+    # 🔥 هذا هو الحل
+    try:
+        cur.execute("ALTER TABLE news ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;")
+        conn.commit()
+    except:
+        pass
+
 def save_news(item):
     try:
         cur.execute("""
@@ -44,19 +51,6 @@ def get_news(tab=None, search=None, page=1):
     limit = 10
     offset = (page - 1) * limit
 
-    query = "SELECT * FROM news WHERE 1=1"
-    params = []
-
-    if tab and tab != "all":
-        query += " AND category = %s"
-        params.append(tab)
-
-    if search:
-        query += " AND LOWER(title) LIKE %s"
-        params.append(f"%{search.lower()}%")
-
-    query += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
-    params.extend([limit, offset])
-
-    cur.execute(query, params)
+    query = "SELECT * FROM news ORDER BY created_at DESC LIMIT %s OFFSET %s"
+    cur.execute(query, (limit, offset))
     return cur.fetchall()
