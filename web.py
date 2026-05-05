@@ -1,5 +1,7 @@
 from flask import Flask
 from db.database import get_news
+from db.database import init_db
+init_db()
 
 app = Flask(__name__)
 
