@@ -9,7 +9,7 @@ def fetch_all_news():
     news = []
     for feed in RSS_FEEDS:
         parsed = feedparser.parse(feed["url"])
-        for entry in parsed.entries[:10]:
+        for entry in parsed.entries[:15]:
             news.append({
                 "id": entry.get("link"),
                 "title": entry.get("title"),

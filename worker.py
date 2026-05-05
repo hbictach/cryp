@@ -1,21 +1,49 @@
 import time
+import random
 from core.scraper import fetch_all_news
 from services.telegram import send_message
+from core.ai import analyze_news
+from core.alerts import is_alert
+from services.twitter import format_tweet
+
+MAX_PER_CYCLE = 3
+
+def is_premium():
+    return random.random() < 0.3
 
 def run():
     seen = set()
 
     while True:
         news = fetch_all_news()
+        count = 0
 
-        for item in news[:5]:
+        for item in news:
+            if count >= MAX_PER_CYCLE:
+                break
+
             if item["id"] in seen:
                 continue
 
-            msg = f"🚨 @CryptositNews\n\n📰 {item['title']}\n\n🔗 {item['url']}"
+            ai = analyze_news(item["title"])
+
+            if not is_alert(item["title"]) and ai["impact"] != "HIGH":
+                continue
+
+            if is_premium():
+                premium = "Premium insight: breakout possible soon"
+            else:
+                premium = "Unlock premium signals -> DM @CryptositNews"
+
+            msg = f"BREAKING @CryptositNews\n\n{item['title']}\n\nAI: {ai['summary']}\nImpact: {ai['impact']}\nSentiment: {ai['sentiment']}\n\n{premium}\n\nLink: {item['url']}"
+
             send_message(msg)
 
+            tweet = format_tweet(item["title"], ai)
+            print("TWEET:", tweet)
+
             seen.add(item["id"])
+            count += 1
 
         time.sleep(60)
 

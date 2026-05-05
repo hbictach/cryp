@@ -4,7 +4,7 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "🚀 CryptoAlertAlpha is running"
+    return "CryptoAlertAlpha running"
 
 @app.route("/health")
 def health():
