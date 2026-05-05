@@ -1,94 +1,57 @@
 import time
-import random
 from core.scraper import fetch_all_news
 from services.telegram import send_message
 from core.ai import analyze_news
 from core.alerts import is_alert
-from services.twitter import format_tweet
-from db.database import save_news
+from db.database import save_news, init_db
 
-MAX_PER_CYCLE = 5  # زدنا العدد باش نشوفو نتائج
+init_db()
 
-def is_premium():
-    return random.random() < 0.3
+MAX_PER_CYCLE = 5
 
 def run():
     seen = set()
 
-    print("🚀 Worker started...")
-
     while True:
-        try:
-            news = fetch_all_news()
-            print(f"📰 Fetched {len(news)} news")
+        news = fetch_all_news()
+        count = 0
 
-            count = 0
+        for item in news:
+            if count >= MAX_PER_CYCLE:
+                break
 
-            for item in news:
-                if count >= MAX_PER_CYCLE:
-                    break
+            if item["id"] in seen:
+                continue
 
-                if not item.get("id") or not item.get("title"):
-                    continue
+            ai = analyze_news(item["title"])
 
-                if item["id"] in seen:
-                    continue
+            # 🧠 تخزين AI data
+            item["sentiment"] = ai.get("sentiment", "neutral")
+            item["impact"] = ai.get("impact", "MEDIUM")
+            item["source"] = item.get("source", "Crypto News")
 
-                ai = analyze_news(item["title"])
+            save_news(item)
 
-                # ❌ عطّلنا الفلترة مؤقتاً
-                # if not is_alert(item["title"]) and ai["impact"] != "HIGH":
-                #     continue
+            # 📢 Telegram
+            msg = f"""
+🚨 BREAKING
 
-                # premium logic
-                if is_premium():
-                    premium = "🔒 Premium insight: breakout possible soon"
-                else:
-                    premium = "🔒 Unlock premium signals 👉 DM @CryptositNews"
+{item['title']}
 
-                msg = f"""
-🚨 BREAKING — @CryptositNews
-
-💥 {item['title']}
-
-🧠 {ai['summary']}
-
-📈 Impact: {ai['impact']}
-📊 Sentiment: {ai['sentiment']}
-
-{premium}
+🧠 {ai.get('summary','')}
+📊 Impact: {item['impact']}
+📈 Sentiment: {item['sentiment']}
 
 🔗 {item['url']}
 """
 
-                # 📢 Telegram
-                try:
-                    send_message(msg)
-                    print("✅ Sent to Telegram")
-                except Exception as e:
-                    print("❌ Telegram error:", e)
+            send_message(msg)
 
-                # 💾 DATABASE (مهم)
-                try:
-                    print("💾 Saving:", item["title"])
-                    save_news(item)
-                except Exception as e:
-                    print("❌ DB error:", e)
+            seen.add(item["id"])
+            count += 1
 
-                # 🐦 Twitter mock
-                tweet = format_tweet(item["title"], ai)
-                print("🐦 TWEET:", tweet)
-
-                seen.add(item["id"])
-                count += 1
-
-            print("⏱ Sleeping...\n")
-            time.sleep(60)
-
-        except Exception as e:
-            print("🔥 Worker crash:", e)
-            time.sleep(10)
-
+        print("⏱ Sleeping...")
+        time.sleep(60)
 
 if __name__ == "__main__":
     run()
