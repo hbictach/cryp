@@ -3,59 +3,46 @@ import psycopg2
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-def get_conn():
-    try:
-        return psycopg2.connect(DATABASE_URL)
-    except Exception as e:
-        print("DB connection error:", e)
-        return None
+conn = psycopg2.connect(DATABASE_URL)
+cur = conn.cursor()
 
 def init_db():
-    conn = get_conn()
-    if not conn:
-        return
-    cur = conn.cursor()
     cur.execute("""
     CREATE TABLE IF NOT EXISTS news (
         id TEXT PRIMARY KEY,
         title TEXT,
-        url TEXT
+        url TEXT,
+        source TEXT,
+        sentiment TEXT,
+        impact TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
     conn.commit()
-    cur.close()
-    conn.close()
 
 def save_news(item):
-    conn = get_conn()
-    if not conn:
-        return
     try:
-        cur = conn.cursor()
-        cur.execute(
-            "INSERT INTO news (id, title, url) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
-            (item["id"], item["title"], item["url"])
-        )
+        cur.execute("""
+        INSERT INTO news (id, title, url, source, sentiment, impact)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT (id) DO NOTHING
+        """, (
+            item["id"],
+            item["title"],
+            item["url"],
+            item.get("source"),
+            item.get("sentiment"),
+            item.get("impact")
+        ))
         conn.commit()
-        cur.close()
-        conn.close()
     except Exception as e:
-        print("DB save error:", e)
+        print("DB ERROR:", e)
 
-def get_news(limit=50):
-    conn = get_conn()
-    if not conn:
-        return []
-    try:
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT id, title, url FROM news ORDER BY id DESC LIMIT %s",
-            (limit,)
-        )
-        data = cur.fetchall()
-        cur.close()
-        conn.close()
-        return data
-    except Exception as e:
-        print("DB fetch error:", e)
-        return []
+def get_news():
+    cur.execute("""
+    SELECT id, title, url, source, sentiment, impact, created_at
+    FROM news
+    ORDER BY created_at DESC
+    LIMIT 50
+    """)
+    return cur.fetchall()
