@@ -7,36 +7,84 @@
 
 <body class="bg-slate-950 text-white">
 
-<div class="p-6 border-b border-slate-800 flex justify-between">
-  <h1 class="font-bold">🚀 CryptositNews</h1>
-  <span class="text-green-400 text-sm">LIVE</span>
+<!-- HEADER -->
+<div class="flex items-center justify-between px-6 py-4 border-b border-slate-800">
+  <div class="flex items-center gap-2">
+    <span class="text-xl font-bold">🚀 CryptositNews</span>
+    <span class="text-green-400 text-xs">● LIVE</span>
+  </div>
+
+  <input placeholder="Search..." class="bg-slate-800 px-3 py-1 rounded text-sm">
 </div>
 
+<!-- LIVE BAR -->
+<div class="flex gap-6 px-6 py-2 text-sm border-b border-slate-800">
+  <div>BTC <span class="text-green-400">$81,637</span></div>
+  <div>ETH <span class="text-green-400">$2,374</span></div>
+  <div>SOL <span class="text-green-400">$86</span></div>
+</div>
+
+<!-- TABS -->
+<div class="flex gap-4 px-6 py-3 text-sm border-b border-slate-800">
+  <a href="/" class="text-blue-400">All</a>
+  <a href="?tab=bitcoin">Bitcoin</a>
+  <a href="?tab=ethereum">Ethereum</a>
+  <a href="?tab=defi">DeFi</a>
+  <a href="?tab=regulation">Regulation</a>
+</div>
+
+<!-- MAIN -->
 <div class="grid grid-cols-4 gap-6 p-6">
 
+<!-- NEWS -->
 <div class="col-span-3 space-y-4">
 
 {% for item in news %}
-<div class="bg-slate-900 p-5 rounded-xl hover:bg-slate-800 transition">
-  <div class="text-red-400 text-xs mb-2">🚨 BREAKING</div>
-  <div class="font-semibold text-lg">{{ item.title }}</div>
-  <a href="/news/{{ item.id }}" class="text-blue-400 text-sm">Read →</a>
+
+<div class="bg-slate-900 p-5 rounded-xl border border-slate-800 hover:border-blue-500 transition">
+
+  <div class="text-xs mb-2 {% if loop.index <= 2 %}text-red-400{% else %}text-gray-400{% endif %}">
+    {% if loop.index <= 2 %}🚨 BREAKING{% else %}📰 NEWS{% endif %}
+  </div>
+
+  <div class="text-lg font-semibold mb-2">
+    {{ item.title }}
+  </div>
+
+  <div class="text-xs text-slate-400 mb-3">
+    {{ item.source }} • {{ item.posted_at }}
+  </div>
+
+  <a href="/news/{{ item.id }}" class="text-blue-400 text-sm">
+    Read more →
+  </a>
+
 </div>
+
 {% endfor %}
 
 </div>
 
-<div class="space-y-4">
+<!-- SIDEBAR -->
+<div class="space-y-5">
 
-<div class="bg-slate-900 p-4 rounded-xl">
-  <h3>Market</h3>
-  <p>BTC $81k</p>
-  <p>ETH $3.2k</p>
+<div class="bg-slate-900 p-4 rounded-xl border border-slate-800 text-center">
+  ✈️
+  <p class="text-sm mt-2">Get alerts instantly</p>
+  <a href="#" class="bg-blue-500 px-3 py-1 rounded text-sm mt-2 inline-block">Join</a>
 </div>
 
-<div class="bg-slate-900 p-4 rounded-xl">
-  <h3>Trending</h3>
+<div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+  <h3 class="mb-2">📊 Market</h3>
+  <p>BTC $81,637</p>
+  <p>ETH $2,374</p>
+  <p>SOL $86</p>
+</div>
+
+<div class="bg-slate-900 p-4 rounded-xl border border-slate-800">
+  <h3 class="mb-2">🔥 Trending</h3>
   <p>#Bitcoin</p>
+  <p>#Ethereum</p>
   <p>#ETF</p>
 </div>
 
