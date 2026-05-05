@@ -1,45 +1,33 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from db.database import get_news
-import requests
 
 app = Flask(__name__)
 
-# 💰 جلب الأسعار الحقيقية
-def get_prices():
-    try:
-        url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana,binancecoin,ripple&vs_currencies=usd"
-        data = requests.get(url).json()
-
-        return {
-            "BTC": data["bitcoin"]["usd"],
-            "ETH": data["ethereum"]["usd"],
-            "SOL": data["solana"]["usd"],
-            "BNB": data["binancecoin"]["usd"],
-            "XRP": data["ripple"]["usd"]
-        }
-    except:
-        return {}
-
 @app.route("/")
 def home():
-    raw_news = get_news()
-    prices = get_prices()
+    tab = request.args.get("tab", "all")
+    search = request.args.get("search", "")
+    page = int(request.args.get("page", 1))
 
-    # 🧠 تحويل البيانات للـ template
+    raw = get_news(tab, search, page)
+
     news = []
-    for n in raw_news:
+    for n in raw:
         news.append({
             "id": n[0],
             "title": n[1],
             "url": n[2],
-            "source": "Crypto News",
-            "impact": "MEDIUM",
-            "sentiment": "neutral",
-            "posted_at": "now"
+            "source": n[3],
+            "sentiment": n[4],
+            "impact": n[5],
+            "category": n[6],
+            "time": str(n[7])[:16]
         })
 
-    return render_template("index.html", news=news, prices=prices)
-
-@app.route("/health")
-def health():
-    return {"status": "ok"}
+    return render_template(
+        "index.html",
+        news=news,
+        tab=tab,
+        search=search,
+        page=page
+    )
