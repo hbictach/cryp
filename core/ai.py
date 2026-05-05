@@ -1,23 +1,42 @@
+import os
+from openai import OpenAI
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 def analyze_news(title):
-    t = title.lower()
+    try:
+        prompt = f"""
+        Analyze this crypto news:
 
-    sentiment = "neutral"
-    impact = "MEDIUM"
-    summary = "General crypto update"
+        "{title}"
 
-    if any(x in t for x in ["surge", "pump", "rally"]):
-        sentiment = "bullish"
-        impact = "HIGH"
-        summary = "Strong upward movement detected"
+        Return JSON:
+        - summary (short)
+        - sentiment (bullish/bearish/neutral)
+        - impact (LOW/MEDIUM/HIGH)
+        - insight (what it means for traders)
+        """
 
-    elif any(x in t for x in ["crash", "hack", "drop"]):
-        sentiment = "bearish"
-        impact = "HIGH"
-        summary = "Market under pressure"
+        response = client.chat.completions.create(
+            model="gpt-4.1-mini",
+            messages=[{"role": "user", "content": prompt}]
+        )
 
-    elif any(x in t for x in ["etf", "sec"]):
-        sentiment = "bullish"
-        impact = "HIGH"
-        summary = "Institutional impact news"
+        text = response.choices[0].message.content
 
-    return {"sentiment": sentiment, "impact": impact, "summary": summary}
+        # hack بسيط (حتى نسرعو)
+        return {
+            "summary": text,
+            "sentiment": "🟢",
+            "impact": "HIGH",
+            "insight": text
+        }
+
+    except Exception as e:
+        print("AI error:", e)
+        return {
+            "summary": "Market update",
+            "sentiment": "⚪",
+            "impact": "MEDIUM",
+            "insight": "No data"
+        }
