@@ -3,35 +3,60 @@ import psycopg2
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
-conn = psycopg2.connect(DATABASE_URL)
-conn.autocommit = True
-cur = conn.cursor()
+def get_connection():
+    return psycopg2.connect(DATABASE_URL)
 
-# create table
-cur.execute("""
-CREATE TABLE IF NOT EXISTS news (
-    id TEXT PRIMARY KEY,
-    title TEXT,
-    url TEXT
-)
-""")
+def init_db():
+    conn = get_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS news (
+        id TEXT PRIMARY KEY,
+        title TEXT,
+        url TEXT
+    )
+    """)
+
+    conn.commit()
+    cur.close()
+    conn.close()
 
 def save_news(item):
     try:
+        conn = get_connection()
+        cur = conn.cursor()
+
         cur.execute(
             "INSERT INTO news (id, title, url) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
             (item["id"], item["title"], item["url"])
         )
+
+        conn.commit()
+        cur.close()
+        conn.close()
+
     except Exception as e:
         print("DB save error:", e)
 
+
 def get_news(limit=50):
     try:
+        conn = get_connection()
+        cur = conn.cursor()
+
         cur.execute(
             "SELECT id, title, url FROM news ORDER BY id DESC LIMIT %s",
             (limit,)
         )
-        return cur.fetchall()
+
+        data = cur.fetchall()
+
+        cur.close()
+        conn.close()
+
+        return data
+
     except Exception as e:
         print("DB fetch error:", e)
         return []
