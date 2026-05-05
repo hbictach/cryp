@@ -1,108 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <script src="https://cdn.tailwindcss.com"></script>
-
 <title>CryptositNews</title>
 </head>
 
 <body class="bg-slate-950 text-white">
 
-<!-- HEADER -->
-<div class="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-    <div class="flex items-center gap-3">
-        <div class="w-8 h-8 bg-blue-500 rounded-full"></div>
-        <h1 class="font-bold text-lg">CryptositNews</h1>
-        <span class="text-green-400 text-xs ml-2">● LIVE</span>
-    </div>
-
-    <input placeholder="Search news..." class="bg-slate-800 px-4 py-2 rounded-lg text-sm w-64">
+<div class="p-6 border-b border-slate-800 flex justify-between">
+  <h1 class="font-bold">🚀 CryptositNews</h1>
+  <span class="text-green-400 text-sm">LIVE</span>
 </div>
 
-<!-- LIVE PRICES BAR -->
-<div class="flex gap-6 px-6 py-2 text-sm border-b border-slate-800 overflow-x-auto">
-    <div>BTC <span class="text-green-400">$81,000</span></div>
-    <div>ETH <span class="text-green-400">$3,200</span></div>
-    <div>SOL <span class="text-green-400">$150</span></div>
-</div>
-
-<!-- TABS -->
-<div class="flex gap-4 px-6 py-3 text-sm border-b border-slate-800">
-    <a href="/" class="text-blue-400">All</a>
-    <a href="?tab=bitcoin">Bitcoin</a>
-    <a href="?tab=ethereum">Ethereum</a>
-    <a href="?tab=defi">DeFi</a>
-    <a href="?tab=regulation">Regulation</a>
-</div>
-
-<!-- MAIN -->
 <div class="grid grid-cols-4 gap-6 p-6">
 
-    <!-- NEWS -->
-    <div class="col-span-3 space-y-4">
+<div class="col-span-3 space-y-4">
 
-        {% for item in news %}
+{% for item in news %}
+<div class="bg-slate-900 p-5 rounded-xl hover:bg-slate-800 transition">
+  <div class="text-red-400 text-xs mb-2">🚨 BREAKING</div>
+  <div class="font-semibold text-lg">{{ item.title }}</div>
+  <a href="/news/{{ item.id }}" class="text-blue-400 text-sm">Read →</a>
+</div>
+{% endfor %}
 
-        <div class="bg-slate-900 p-5 rounded-xl hover:bg-slate-800 transition border border-slate-800">
+</div>
 
-            <!-- BADGE -->
-            <div class="text-xs text-red-400 mb-2">
-                🚨 BREAKING
-            </div>
+<div class="space-y-4">
 
-            <!-- TITLE -->
-            <div class="font-semibold text-lg mb-2">
-                {{ item.title }}
-            </div>
+<div class="bg-slate-900 p-4 rounded-xl">
+  <h3>Market</h3>
+  <p>BTC $81k</p>
+  <p>ETH $3.2k</p>
+</div>
 
-            <!-- META -->
-            <div class="text-xs text-slate-400 mb-3">
-                {{ item.source }} • {{ item.posted_at }}
-            </div>
+<div class="bg-slate-900 p-4 rounded-xl">
+  <h3>Trending</h3>
+  <p>#Bitcoin</p>
+  <p>#ETF</p>
+</div>
 
-            <!-- BUTTON -->
-            <a href="/news/{{ item.id }}" class="text-blue-400 text-sm">
-                Read more →
-            </a>
-
-        </div>
-
-        {% endfor %}
-
-    </div>
-
-    <!-- SIDEBAR -->
-    <div class="space-y-6">
-
-        <!-- TELEGRAM CTA -->
-        <div class="bg-slate-900 p-5 rounded-xl text-center border border-slate-800">
-            ✈️<br><br>
-            <p class="text-sm mb-3">Get crypto alerts instantly</p>
-            <a href="https://t.me/CryptoAlertAlpha" class="bg-blue-500 px-4 py-2 rounded-lg text-sm">
-                Join Channel
-            </a>
-        </div>
-
-        <!-- PRICES -->
-        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-            <h3 class="mb-3 text-sm">📊 Live Prices</h3>
-            <p>BTC: $81,000</p>
-            <p>ETH: $3,200</p>
-            <p>SOL: $150</p>
-        </div>
-
-        <!-- TRENDING -->
-        <div class="bg-slate-900 p-5 rounded-xl border border-slate-800">
-            <h3 class="mb-3 text-sm">🔥 Trending</h3>
-            <p>#Bitcoin</p>
-            <p>#ETF</p>
-            <p>#Ethereum</p>
-        </div>
-
-    </div>
+</div>
 
 </div>
 
