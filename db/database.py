@@ -1,9 +1,13 @@
-import psycopg2
 import os
+import psycopg2
 
-conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+conn = psycopg2.connect(DATABASE_URL)
+conn.autocommit = True
 cur = conn.cursor()
 
+# create table
 cur.execute("""
 CREATE TABLE IF NOT EXISTS news (
     id TEXT PRIMARY KEY,
@@ -11,18 +15,23 @@ CREATE TABLE IF NOT EXISTS news (
     url TEXT
 )
 """)
-conn.commit()
 
 def save_news(item):
     try:
         cur.execute(
-            "INSERT INTO news (id,title,url) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
+            "INSERT INTO news (id, title, url) VALUES (%s, %s, %s) ON CONFLICT DO NOTHING",
             (item["id"], item["title"], item["url"])
         )
-        conn.commit()
-    except:
-        pass
+    except Exception as e:
+        print("DB save error:", e)
 
 def get_news(limit=50):
-    cur.execute("SELECT * FROM news ORDER BY id DESC LIMIT %s", (limit,))
-    return cur.fetchall()
+    try:
+        cur.execute(
+            "SELECT id, title, url FROM news ORDER BY id DESC LIMIT %s",
+            (limit,)
+        )
+        return cur.fetchall()
+    except Exception as e:
+        print("DB fetch error:", e)
+        return []
