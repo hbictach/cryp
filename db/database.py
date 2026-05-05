@@ -15,6 +15,7 @@ def init_db():
         source TEXT,
         sentiment TEXT,
         impact TEXT,
+        category TEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """)
@@ -23,8 +24,8 @@ def init_db():
 def save_news(item):
     try:
         cur.execute("""
-        INSERT INTO news (id, title, url, source, sentiment, impact)
-        VALUES (%s, %s, %s, %s, %s, %s)
+        INSERT INTO news (id, title, url, source, sentiment, impact, category)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
         ON CONFLICT (id) DO NOTHING
         """, (
             item["id"],
@@ -32,17 +33,30 @@ def save_news(item):
             item["url"],
             item.get("source"),
             item.get("sentiment"),
-            item.get("impact")
+            item.get("impact"),
+            item.get("category")
         ))
         conn.commit()
     except Exception as e:
         print("DB ERROR:", e)
 
-def get_news():
-    cur.execute("""
-    SELECT id, title, url, source, sentiment, impact, created_at
-    FROM news
-    ORDER BY created_at DESC
-    LIMIT 50
-    """)
+def get_news(tab=None, search=None, page=1):
+    limit = 10
+    offset = (page - 1) * limit
+
+    query = "SELECT * FROM news WHERE 1=1"
+    params = []
+
+    if tab and tab != "all":
+        query += " AND category = %s"
+        params.append(tab)
+
+    if search:
+        query += " AND LOWER(title) LIKE %s"
+        params.append(f"%{search.lower()}%")
+
+    query += " ORDER BY created_at DESC LIMIT %s OFFSET %s"
+    params.extend([limit, offset])
+
+    cur.execute(query, params)
     return cur.fetchall()
