@@ -5,45 +5,23 @@ app = Flask(__name__)
 
 @app.route("/")
 def home():
-    news = get_news()
+    try:
+        news = get_news()
 
-    html = """
-    <html>
-    <head>
-        <title>CryptoAlertAlpha</title>
-        <style>
-            body {
-                background: #0f172a;
-                color: white;
-                font-family: Arial;
-                padding: 20px;
-            }
-            .card {
-                background: #1e293b;
-                padding: 15px;
-                margin-bottom: 15px;
-                border-radius: 10px;
-            }
-            a {
-                color: #38bdf8;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>🚀 Crypto Alerts</h1>
-    """
+        html = "<h1>🚀 Crypto Alerts</h1>"
 
-    for n in news:
-        html += f"""
-        <div class="card">
-            <b>{n[1]}</b><br>
-            <a href="{n[2]}" target="_blank">Read more</a>
-        </div>
-        """
+        for n in news:
+            html += f"""
+            <div style="margin-bottom:20px;">
+                <b>{n[1]}</b><br>
+                <a href="{n[2]}" target="_blank">Read</a>
+            </div>
+            """
 
-    html += "</body></html>"
+        return html
 
-    return html
+    except Exception as e:
+        return f"Error loading page: {e}"
 
 
 @app.route("/health")
