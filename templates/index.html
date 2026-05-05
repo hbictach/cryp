@@ -1,9 +1,7 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <script src="https://cdn.tailwindcss.com"></script>
 
 <title>CryptositNews</title>
@@ -14,23 +12,15 @@ body {
 }
 .glass {
   background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(10px);
-}
-.card {
-  transition: all 0.2s ease;
-}
-.card:hover {
-  transform: translateY(-3px);
-  border-color: #ec4899;
+  backdrop-filter: blur(12px);
 }
 </style>
-
 </head>
 
 <body class="text-white font-sans">
 
 <!-- HEADER -->
-<div class="flex items-center justify-between px-6 py-4 border-b border-slate-800 glass">
+<div class="flex justify-between items-center px-6 py-4 border-b border-slate-800 glass">
 
   <div class="flex items-center gap-3">
     <div class="w-9 h-9 rounded-xl bg-gradient-to-r from-blue-500 to-purple-500"></div>
@@ -38,30 +28,18 @@ body {
     <span class="text-green-400 text-xs animate-pulse">● LIVE</span>
   </div>
 
-  <input placeholder="Search crypto news..." class="bg-slate-900 px-4 py-2 rounded-xl text-sm w-80 outline-none border border-slate-800 focus:border-blue-500">
-
-  <a href="#" class="bg-blue-500 px-4 py-2 rounded-xl text-sm hover:bg-blue-600 transition">Telegram</a>
+  <div class="flex gap-4 items-center">
+    <input placeholder="Search..." class="bg-slate-900 px-4 py-2 rounded-xl text-sm border border-slate-800">
+    <a href="#" class="bg-blue-500 px-4 py-2 rounded-xl text-sm">Telegram</a>
+  </div>
 
 </div>
 
-<!-- LIVE PRICES -->
-<div class="flex gap-6 px-6 py-2 text-xs border-b border-slate-800 overflow-x-auto text-green-400">
-  <div>BTC $81,500 ▲</div>
-  <div>ETH $2,370 ▲</div>
-  <div>SOL $86 ▲</div>
-  <div>BNB $630 ▲</div>
-  <div>XRP $1.41 ▲</div>
-</div>
-
-<!-- TABS -->
-<div class="flex gap-4 px-6 py-3 text-sm border-b border-slate-800">
-  <a href="/" class="text-blue-400">All</a>
-  <a href="#">Breaking</a>
-  <a href="#">Bitcoin</a>
-  <a href="#">Ethereum</a>
-  <a href="#">DeFi</a>
-  <a href="#">NFT</a>
-  <a href="#">Regulation</a>
+<!-- PRICES -->
+<div class="flex gap-6 px-6 py-2 text-xs border-b border-slate-800 text-green-400">
+  {% for k,v in prices.items() %}
+    <div>{{ k }} ${{ v }}</div>
+  {% endfor %}
 </div>
 
 <!-- MAIN -->
@@ -74,7 +52,7 @@ body {
 
 {% for item in news %}
 
-<div class="card glass p-5 rounded-2xl border border-slate-800 flex justify-between items-center">
+<div class="glass p-5 rounded-2xl border border-slate-800 flex justify-between items-center hover:border-pink-500 transition">
 
   <div>
 
@@ -83,7 +61,7 @@ body {
       <span class="bg-red-500 px-2 py-1 rounded">BREAKING</span>
 
       <span class="bg-slate-700 px-2 py-1 rounded">
-        {{ item.category if item.category else "market" }}
+        {{ item.source }}
       </span>
 
     </div>
@@ -93,31 +71,22 @@ body {
     </div>
 
     <div class="text-xs text-slate-400">
-      {{ item.source }} • {{ item.posted_at }}
+      {{ item.posted_at }}
     </div>
 
   </div>
 
   <div class="flex items-center gap-3">
 
-    <!-- IMPACT -->
-    <span class="px-2 py-1 rounded text-xs 
-    {% if item.impact == 'HIGH' %}bg-red-500
-    {% elif item.impact == 'MEDIUM' %}bg-yellow-500
-    {% else %}bg-green-500
-    {% endif %}">
-      {{ item.impact if item.impact else "MEDIUM" }}
+    <span class="px-2 py-1 rounded text-xs bg-yellow-500">
+      {{ item.impact }}
     </span>
 
-    <!-- SENTIMENT -->
-    <span class="text-xs
-    {% if item.sentiment == 'bullish' %}text-green-400
-    {% else %}text-red-400
-    {% endif %}">
-      {{ item.sentiment if item.sentiment else "neutral" }}
+    <span class="text-xs text-green-400">
+      {{ item.sentiment }}
     </span>
 
-    <a href="/news/{{ item.id }}" class="text-blue-400 text-xl">→</a>
+    <a href="{{ item.url }}" target="_blank" class="text-blue-400 text-xl">→</a>
 
   </div>
 
@@ -130,38 +99,22 @@ body {
 <!-- SIDEBAR -->
 <div class="space-y-5">
 
-<!-- CTA -->
 <div class="glass p-5 rounded-2xl border border-slate-800 text-center">
   ✈️
   <p class="text-sm mt-2 mb-3">Get alerts instantly</p>
-  <a href="#" class="bg-blue-500 px-4 py-2 rounded-xl text-sm">Join Channel</a>
+  <a href="#" class="bg-blue-500 px-4 py-2 rounded-xl text-sm">Join</a>
 </div>
 
-<!-- MARKET -->
 <div class="glass p-5 rounded-2xl border border-slate-800">
-  <h3 class="text-sm mb-3">📊 Live Prices</h3>
+  <h3 class="text-sm mb-3">📊 Market</h3>
 
-  <div class="space-y-2 text-sm">
-    <div class="flex justify-between"><span>BTC</span><span class="text-green-400">$81,500</span></div>
-    <div class="flex justify-between"><span>ETH</span><span class="text-green-400">$2,370</span></div>
-    <div class="flex justify-between"><span>SOL</span><span class="text-green-400">$86</span></div>
-    <div class="flex justify-between"><span>BNB</span><span class="text-green-400">$630</span></div>
+  {% for k,v in prices.items() %}
+  <div class="flex justify-between text-sm mb-1">
+    <span>{{ k }}</span>
+    <span class="text-green-400">${{ v }}</span>
   </div>
-</div>
+  {% endfor %}
 
-<!-- FEAR INDEX -->
-<div class="glass p-5 rounded-2xl border border-slate-800 text-center">
-  <h3 class="text-sm mb-2">⚡ Fear & Greed</h3>
-  <div class="text-3xl text-yellow-400 font-bold">50</div>
-  <div class="text-xs text-slate-400">Neutral</div>
-</div>
-
-<!-- TRENDING -->
-<div class="glass p-5 rounded-2xl border border-slate-800">
-  <h3 class="text-sm mb-3">🔥 Trending</h3>
-  <p>#Bitcoin</p>
-  <p>#Ethereum</p>
-  <p>#ETF</p>
 </div>
 
 </div>
