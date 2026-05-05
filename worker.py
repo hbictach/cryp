@@ -28,17 +28,14 @@ def run():
 
             ai = analyze_news(item["title"])
 
-            # filter مهم
             if not is_alert(item["title"]) and ai["impact"] != "HIGH":
                 continue
 
-            # premium logic
             if is_premium():
                 premium = "🔒 Premium insight: breakout possible soon"
             else:
                 premium = "🔒 Unlock premium signals 👉 DM @CryptositNews"
 
-            # message
             msg = f"""
 🚨 BREAKING — @CryptositNews
 
@@ -57,7 +54,7 @@ def run():
             # send telegram
             send_message(msg)
 
-            # 🔥 هنا التخزين الصحيح
+            # save to database 🔥
             save_news(item)
 
             # twitter mock
