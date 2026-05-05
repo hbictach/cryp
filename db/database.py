@@ -1,19 +1,22 @@
-import sqlite3
+import psycopg2
+import os
 
-conn = sqlite3.connect("data.db", check_same_thread=False)
+conn = psycopg2.connect(os.getenv("DATABASE_URL"))
+cur = conn.cursor()
 
-conn.execute("""
+cur.execute("""
 CREATE TABLE IF NOT EXISTS news (
     id TEXT PRIMARY KEY,
     title TEXT,
     url TEXT
 )
 """)
+conn.commit()
 
 def save_news(item):
     try:
-        conn.execute(
-            "INSERT OR IGNORE INTO news VALUES (?,?,?)",
+        cur.execute(
+            "INSERT INTO news (id,title,url) VALUES (%s,%s,%s) ON CONFLICT DO NOTHING",
             (item["id"], item["title"], item["url"])
         )
         conn.commit()
@@ -21,7 +24,5 @@ def save_news(item):
         pass
 
 def get_news(limit=50):
-    cur = conn.execute(
-        "SELECT * FROM news ORDER BY rowid DESC LIMIT ?", (limit,)
-    )
+    cur.execute("SELECT * FROM news ORDER BY id DESC LIMIT %s", (limit,))
     return cur.fetchall()
