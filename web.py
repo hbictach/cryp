@@ -1,99 +1,116 @@
 from flask import Flask
 from db.database import get_news
+import requests
 
 app = Flask(__name__)
+
+# 💰 جلب الأسعار الحقيقية
+def get_prices():
+    try:
+        url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd"
+        data = requests.get(url).json()
+
+        return {
+            "BTC": data["bitcoin"]["usd"],
+            "ETH": data["ethereum"]["usd"],
+            "SOL": data["solana"]["usd"]
+        }
+    except:
+        return {"BTC": "-", "ETH": "-", "SOL": "-"}
+
 
 @app.route("/")
 def home():
     news = get_news()
+    prices = get_prices()
 
-    html = """
+    html = f"""
     <html>
     <head>
         <title>CryptoAlertAlpha</title>
+
         <style>
-            body {
+            body {{
                 margin: 0;
-                font-family: 'Segoe UI';
+                font-family: 'Segoe UI', sans-serif;
                 background: linear-gradient(135deg, #0f172a, #020617);
                 color: white;
-            }
+            }}
 
-            .header {
+            .header {{
                 display: flex;
                 justify-content: space-between;
-                align-items: center;
                 padding: 20px 40px;
                 background: rgba(255,255,255,0.03);
-                backdrop-filter: blur(10px);
-            }
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }}
 
-            .logo {
+            .logo {{
                 font-size: 22px;
                 font-weight: bold;
-            }
+            }}
 
-            .container {
+            .container {{
                 display: grid;
                 grid-template-columns: 3fr 1fr;
                 gap: 20px;
                 padding: 30px;
-            }
+            }}
 
-            .main {
-            }
-
-            .sidebar {
-                background: rgba(255,255,255,0.05);
-                padding: 15px;
-                border-radius: 12px;
-            }
-
-            .card {
-                background: rgba(255,255,255,0.04);
-                padding: 18px;
-                border-radius: 14px;
-                margin-bottom: 15px;
+            .card {{
+                background: linear-gradient(145deg, #1e293b, #0f172a);
+                padding: 20px;
+                border-radius: 16px;
+                margin-bottom: 20px;
+                border: 1px solid rgba(255,255,255,0.08);
+                box-shadow: 0 10px 25px rgba(0,0,0,0.3);
                 transition: 0.2s;
-                border: 1px solid rgba(255,255,255,0.05);
-            }
+            }}
 
-            .card:hover {
-                transform: translateY(-3px);
+            .card:hover {{
+                transform: translateY(-4px);
                 border-color: #38bdf8;
-            }
+            }}
 
-            .title {
+            .title {{
                 font-size: 16px;
                 font-weight: 600;
                 margin-bottom: 10px;
-            }
+            }}
 
-            .btn {
-                display: inline-block;
+            .meta {{
+                font-size: 12px;
+                color: #94a3b8;
+                margin-bottom: 10px;
+            }}
+
+            .btn {{
                 padding: 6px 12px;
                 background: #38bdf8;
                 border-radius: 8px;
                 color: black;
                 text-decoration: none;
                 font-size: 13px;
-            }
+            }}
 
-            .badge {
-                background: #ef4444;
-                padding: 4px 8px;
-                font-size: 11px;
-                border-radius: 6px;
-                margin-right: 6px;
-            }
+            .sidebar {{
+                background: rgba(255,255,255,0.05);
+                padding: 20px;
+                border-radius: 12px;
+            }}
 
-            .price {
+            .price {{
                 margin-bottom: 10px;
                 padding: 10px;
                 background: #020617;
                 border-radius: 10px;
-            }
+            }}
+
+            h3 {{
+                margin-top: 0;
+            }}
         </style>
+
     </head>
 
     <body>
@@ -105,28 +122,30 @@ def home():
 
         <div class="container">
 
-            <div class="main">
+            <div>
     """
 
     for i, n in enumerate(news):
-        badge = "🚨" if i < 2 else ""
+        badge = "🚨 BREAKING" if i < 2 else "📰 NEWS"
 
         html += f"""
         <div class="card">
-            <div class="title">{badge} {n[1]}</div>
+            <div class="meta">{badge}</div>
+            <div class="title">{n[1]}</div>
+            <div class="meta">Source: Crypto News</div>
             <a class="btn" href="{n[2]}" target="_blank">Read more</a>
         </div>
         """
 
-    html += """
+    html += f"""
             </div>
 
             <div class="sidebar">
                 <h3>📊 Market</h3>
 
-                <div class="price">BTC: $68,200</div>
-                <div class="price">ETH: $3,450</div>
-                <div class="price">SOL: $155</div>
+                <div class="price">BTC: ${prices['BTC']}</div>
+                <div class="price">ETH: ${prices['ETH']}</div>
+                <div class="price">SOL: ${prices['SOL']}</div>
 
                 <h3>🔥 Trending</h3>
                 <p>#Bitcoin</p>
