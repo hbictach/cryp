@@ -142,3 +142,20 @@ def get_news(tab=None, search=None, page=1):
         print("GET NEWS ERROR:", e)
         _rollback()
         return []
+
+
+def get_recent_news(limit=100):
+    cur = _get_cursor()
+    if cur is None:
+        return []
+
+    try:
+        _rollback()
+        limit = max(min(int(limit or 100), 500), 1)
+        cur.execute(f"SELECT {NEWS_COLUMNS} FROM news ORDER BY created_at DESC LIMIT %s", (limit,))
+        return cur.fetchall()
+
+    except Exception as e:
+        print("GET RECENT NEWS ERROR:", e)
+        _rollback()
+        return []
