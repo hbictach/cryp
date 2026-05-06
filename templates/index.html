@@ -251,18 +251,7 @@ body {
 </footer>
 
 <script>
-const TOP_COINS = [
-  { id: "bitcoin", symbol: "BTC", name: "Bitcoin" },
-  { id: "ethereum", symbol: "ETH", name: "Ethereum" },
-  { id: "tether", symbol: "USDT", name: "Tether" },
-  { id: "binancecoin", symbol: "BNB", name: "BNB" },
-  { id: "solana", symbol: "SOL", name: "Solana" },
-  { id: "usd-coin", symbol: "USDC", name: "USD Coin" },
-  { id: "ripple", symbol: "XRP", name: "XRP" },
-  { id: "dogecoin", symbol: "DOGE", name: "Dogecoin" },
-  { id: "cardano", symbol: "ADA", name: "Cardano" },
-  { id: "tron", symbol: "TRX", name: "TRON" },
-];
+const COINS_MARKETS_ENDPOINT = "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h";
 
 function formatUsd(value) {
   if (value === undefined || value === null) return "N/A";
@@ -282,42 +271,65 @@ function changeClass(value) {
   return Number(value) >= 0 ? "text-emerald-300" : "text-red-300";
 }
 
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    "\"": "&quot;",
+    "'": "&#39;",
+  }[char]));
+}
+
+function coinSymbol(coin) {
+  return escapeHtml((coin.symbol || "").toUpperCase());
+}
+
+function coinName(coin) {
+  return escapeHtml(coin.name || "Unknown");
+}
+
+function coinChange(coin) {
+  return coin.price_change_percentage_24h_in_currency ?? coin.price_change_percentage_24h;
+}
+
 async function loadPrices() {
-  const ids = TOP_COINS.map((coin) => coin.id).join(",");
-
   try {
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd&include_24hr_change=true`);
-    const data = await res.json();
+    const res = await fetch(COINS_MARKETS_ENDPOINT, { headers: { "Accept": "application/json" } });
+    if (!res.ok) throw new Error(`CoinGecko responded with ${res.status}`);
 
-    const coins = TOP_COINS.map((coin) => ({
-      ...coin,
-      price: data[coin.id]?.usd,
-      change: data[coin.id]?.usd_24h_change,
-    }));
+    const coins = (await res.json()).slice(0, 10);
+    if (!coins.length) throw new Error("CoinGecko returned an empty market list");
 
     document.getElementById("ticker-content").innerHTML = coins.map((coin, index) => `
       <span class="mx-2 inline-flex items-center gap-2 rounded-full border border-slate-700/80 bg-slate-900/90 px-3 py-1 shadow-lg shadow-cyan-950/20">
-        <span class="grid h-5 w-5 place-items-center rounded-full bg-cyan-400 text-[10px] font-black text-slate-950">${index + 1}</span>
-        <strong class="text-white">${coin.symbol}</strong>
-        <span>${formatUsd(coin.price)}</span>
-        <span class="${changeClass(coin.change)}">${formatChange(coin.change)}%</span>
+        <span class="grid h-5 w-5 place-items-center rounded-full bg-cyan-400 text-[10px] font-black text-slate-950">${coin.market_cap_rank || index + 1}</span>
+        <img src="${coin.image}" alt="" class="h-4 w-4 rounded-full" loading="lazy">
+        <strong class="text-white">${coinSymbol(coin)}</strong>
+        <span>${formatUsd(coin.current_price)}</span>
+        <span class="${changeClass(coinChange(coin))}">${formatChange(coinChange(coin))}%</span>
       </span>
     `).join("");
 
     document.getElementById("prices").innerHTML = coins.map((coin, index) => `
       <div class="rounded-2xl border border-slate-800 bg-slate-950/80 p-3">
         <div class="flex items-center justify-between gap-2">
-          <span class="text-[11px] font-bold text-slate-500">#${index + 1}</span>
-          <span class="text-[11px] font-bold ${changeClass(coin.change)}">${formatChange(coin.change)}%</span>
+          <span class="text-[11px] font-bold text-slate-500">#${coin.market_cap_rank || index + 1}</span>
+          <span class="text-[11px] font-bold ${changeClass(coinChange(coin))}">${formatChange(coinChange(coin))}%</span>
         </div>
-        <div class="mt-2 font-black text-white">${coin.symbol}</div>
-        <div class="text-xs text-slate-400">${coin.name}</div>
-        <div class="mt-2 text-sm font-bold text-cyan-200">${formatUsd(coin.price)}</div>
+        <div class="mt-3 flex items-center gap-2">
+          <img src="${coin.image}" alt="${coinName(coin)} logo" class="h-7 w-7 rounded-full" loading="lazy">
+          <div>
+            <div class="font-black text-white">${coinSymbol(coin)}</div>
+            <div class="text-xs text-slate-400">${coinName(coin)}</div>
+          </div>
+        </div>
+        <div class="mt-3 text-sm font-bold text-cyan-200">${formatUsd(coin.current_price)}</div>
       </div>
     `).join("");
 
     const movers = [...coins]
-      .sort((a, b) => Math.abs(b.change ?? 0) - Math.abs(a.change ?? 0))
+      .sort((a, b) => Math.abs(coinChange(b) ?? 0) - Math.abs(coinChange(a) ?? 0))
       .slice(0, 5);
 
     document.getElementById("marketBox").innerHTML = `
@@ -325,19 +337,23 @@ async function loadPrices() {
       <div class="space-y-3">
         ${movers.map((coin) => `
           <div class="flex items-center justify-between gap-3 rounded-xl bg-slate-900/80 px-3 py-2">
-            <div>
-              <p class="font-bold text-white">${coin.symbol}</p>
-              <p class="text-xs text-slate-500">${coin.name}</p>
+            <div class="flex items-center gap-2">
+              <img src="${coin.image}" alt="" class="h-6 w-6 rounded-full" loading="lazy">
+              <div>
+                <p class="font-bold text-white">${coinSymbol(coin)}</p>
+                <p class="text-xs text-slate-500">${coinName(coin)}</p>
+              </div>
             </div>
             <div class="text-right">
-              <p class="font-bold text-cyan-200">${formatUsd(coin.price)}</p>
-              <p class="text-xs font-bold ${changeClass(coin.change)}">${formatChange(coin.change)}%</p>
+              <p class="font-bold text-cyan-200">${formatUsd(coin.current_price)}</p>
+              <p class="text-xs font-bold ${changeClass(coinChange(coin))}">${formatChange(coinChange(coin))}%</p>
             </div>
           </div>
         `).join("")}
       </div>`;
 
-  } catch {
+  } catch (error) {
+    console.error("MARKET DATA ERROR", error);
     document.getElementById("prices").innerHTML = "Price data temporarily unavailable";
     document.getElementById("ticker-content").innerHTML = "Market data unavailable • Latest crypto news still loading from expanded RSS sources";
   }

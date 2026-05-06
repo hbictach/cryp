@@ -1,5 +1,7 @@
 from datetime import datetime, timezone
+from threading import Lock
 import time
+from xml.sax.saxutils import escape
 
 from flask import Flask, Response, jsonify, render_template, request, url_for
 
@@ -14,6 +16,7 @@ _fallback_cache = {
     "expires_at": 0,
     "items": [],
 }
+_fallback_cache_lock = Lock()
 
 SEO_KEYWORDS = [
     "crypto news",
@@ -104,9 +107,12 @@ def _format_live_item(item):
 def _live_rss_news(tab="all", search="", page=1):
     now = time.time()
     if now >= _fallback_cache["expires_at"]:
-        live_items = [_format_live_item(item) for item in fetch_all_news()]
-        _fallback_cache["items"] = live_items
-        _fallback_cache["expires_at"] = now + (FALLBACK_CACHE_SECONDS if live_items else 60)
+        with _fallback_cache_lock:
+            now = time.time()
+            if now >= _fallback_cache["expires_at"]:
+                live_items = [_format_live_item(item) for item in fetch_all_news()]
+                _fallback_cache["items"] = live_items
+                _fallback_cache["expires_at"] = now + (FALLBACK_CACHE_SECONDS if live_items else 60)
 
     items = _fallback_cache["items"]
     if tab and tab != "all":
@@ -160,7 +166,7 @@ def sitemap_xml():
         if tab != "all"
     ]
     body = "".join(
-        f"<url><loc>{url}</loc><lastmod>{today}</lastmod><changefreq>hourly</changefreq></url>"
+        f"<url><loc>{escape(url)}</loc><lastmod>{today}</lastmod><changefreq>hourly</changefreq></url>"
         for url in urls
     )
     return Response(
@@ -173,6 +179,10 @@ def sitemap_xml():
 @app.route("/")
 def home():
     tab = request.args.get("tab", "all")
+    valid_tabs = {value for value, _label in CATEGORY_TABS}
+    if tab not in valid_tabs:
+        tab = "all"
+
     search = request.args.get("search", "").strip()
     page = _parse_page(request.args.get("page", 1))
 
