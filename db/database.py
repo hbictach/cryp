@@ -1,20 +1,61 @@
 import os
+
 import psycopg2
+from psycopg2 import OperationalError
 
-DATABASE_URL = os.getenv("DATABASE_URL")
+_conn = None
+_cur = None
 
-conn = psycopg2.connect(DATABASE_URL)
-cur = conn.cursor()
+
+NEWS_COLUMNS = "id, title, url, source, sentiment, impact, category, created_at"
+
+
+def _database_url():
+    return os.getenv("DATABASE_URL")
+
+
+def is_database_configured():
+    return bool(_database_url())
+
+
+def _get_cursor():
+    """Return a live database cursor, or None when the DB is not configured."""
+    global _conn, _cur
+
+    database_url = _database_url()
+    if not database_url:
+        print("DATABASE_URL is not configured")
+        return None
+
+    try:
+        if _conn is None or _conn.closed:
+            _conn = psycopg2.connect(database_url)
+            _cur = _conn.cursor()
+        return _cur
+    except OperationalError as e:
+        print("DB CONNECTION ERROR:", e)
+        _conn = None
+        _cur = None
+        return None
+
+
+def _rollback():
+    if _conn is not None and not _conn.closed:
+        _conn.rollback()
 
 
 # ✅ إنشاء / تحديث table
 def init_db():
+    cur = _get_cursor()
+    if cur is None:
+        return False
+
     try:
         cur.execute("""
         CREATE TABLE IF NOT EXISTS news (
             id TEXT PRIMARY KEY,
-            title TEXT,
-            url TEXT,
+            title TEXT NOT NULL,
+            url TEXT NOT NULL,
             source TEXT,
             sentiment TEXT,
             impact TEXT,
@@ -22,22 +63,28 @@ def init_db():
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """)
-        conn.commit()
+        _conn.commit()
 
         # 🔥 إصلاح column إذا ما كانش
-        try:
-            cur.execute("ALTER TABLE news ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;")
-            conn.commit()
-        except:
-            conn.rollback()
+        cur.execute("""
+        ALTER TABLE news
+        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+        """)
+        _conn.commit()
+        return True
 
     except Exception as e:
         print("INIT DB ERROR:", e)
-        conn.rollback()
+        _rollback()
+        return False
 
 
 # ✅ حفظ الأخبار
 def save_news(item):
+    cur = _get_cursor()
+    if cur is None:
+        return False
+
     try:
         cur.execute("""
         INSERT INTO news (id, title, url, source, sentiment, impact, category)
@@ -50,24 +97,31 @@ def save_news(item):
             item.get("source"),
             item.get("sentiment"),
             item.get("impact"),
-            item.get("category")
+            item.get("category"),
         ))
-        conn.commit()
+        _conn.commit()
+        return True
 
     except Exception as e:
         print("SAVE NEWS ERROR:", e)
-        conn.rollback()
+        _rollback()
+        return False
 
 
 # ✅ جلب الأخبار (بدون crash)
 def get_news(tab=None, search=None, page=1):
+    cur = _get_cursor()
+    if cur is None:
+        return []
+
     try:
-        conn.rollback()  # 🔥 مهم بزاف
+        _rollback()  # 🔥 مهم بزاف
 
         limit = 10
+        page = max(int(page or 1), 1)
         offset = (page - 1) * limit
 
-        query = "SELECT * FROM news WHERE 1=1"
+        query = f"SELECT {NEWS_COLUMNS} FROM news WHERE 1=1"
         params = []
 
         if tab and tab != "all":
@@ -86,5 +140,5 @@ def get_news(tab=None, search=None, page=1):
 
     except Exception as e:
         print("GET NEWS ERROR:", e)
-        conn.rollback()
+        _rollback()
         return []
