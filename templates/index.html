@@ -84,7 +84,7 @@ body {
 
 <header class="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl">
   <div id="ticker" class="overflow-hidden whitespace-nowrap border-b border-slate-800 py-2 text-xs text-cyan-200 bg-black/70">
-    <div id="ticker-content" class="inline-block animate-scroll">
+    <div id="ticker-content" class="inline-block animate-scroll" aria-live="polite">
       Loading top 10 crypto market prices...
     </div>
   </div>
@@ -147,10 +147,10 @@ body {
         <h2 class="text-lg font-bold">📊 Live Market</h2>
         <span class="rounded-full bg-green-400/10 px-3 py-1 text-xs font-bold text-green-300">● LIVE</span>
       </div>
-      <div id="prices" class="grid grid-cols-2 gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300 sm:grid-cols-3 lg:grid-cols-2">
+      <div id="prices" class="grid grid-cols-2 gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300 sm:grid-cols-3 lg:grid-cols-2" aria-live="polite">
         Loading top 10 prices...
       </div>
-      <div id="marketBox" class="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300">
+      <div id="marketBox" class="mt-4 rounded-2xl border border-slate-800 bg-slate-950/70 p-4 text-sm text-slate-300" aria-live="polite">
         Loading top market movers...
       </div>
       <div class="mt-5 rounded-2xl border border-blue-400/20 bg-blue-500/10 p-4 text-sm text-slate-200">

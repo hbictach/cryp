@@ -111,7 +111,7 @@ def _live_rss_news(tab="all", search="", page=1):
         with _fallback_cache_lock:
             now = time.time()
             if now >= _fallback_cache["expires_at"]:
-                live_items = [_format_live_item(item) for item in fetch_all_news()]
+                live_items = [_format_live_item(item) for item in fetch_all_news(max_items=60)]
                 _fallback_cache["items"] = live_items
                 _fallback_cache["expires_at"] = now + (FALLBACK_CACHE_SECONDS if live_items else 60)
 

@@ -25,6 +25,7 @@ HEADERS = {
 
 REQUEST_TIMEOUT_SECONDS = 6
 MAX_WORKERS = 8
+DEFAULT_MAX_ITEMS = 80
 
 
 def _published_timestamp(entry):
@@ -62,7 +63,7 @@ def _entry_to_item(feed_config, feed, entry):
     }
 
 
-def fetch_all_news():
+def fetch_all_news(max_items=DEFAULT_MAX_ITEMS):
     news = []
     seen_links = set()
 
@@ -92,4 +93,7 @@ def fetch_all_news():
                 seen_links.add(item["url"])
                 news.append(item)
 
-    return sorted(news, key=lambda item: item.get("published_ts", 0), reverse=True)
+    sorted_news = sorted(news, key=lambda item: item.get("published_ts", 0), reverse=True)
+    if max_items is None:
+        return sorted_news
+    return sorted_news[:max_items]
